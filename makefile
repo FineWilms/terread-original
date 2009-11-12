@@ -7,7 +7,10 @@ XFLAGS = -O
 LIBS = -L /tools/netcdf/3.6.0-p1/lib -lnetcdf
 INC = -I /tools/netcdf/3.6.0-p1/include
 
-OBJT = terread.o read_ht.o setxyz.o jimcc.o latltoij.o read1km.o read250.o read10km.o amap.o ncdf.o
+OBJT = terread.o read_ht.o read1km.o read250.o read10km.o amap.o rwork.o ncdf.o \
+       ccinterp.o latltoij_m.o setxyz_m.o xyzinfo_m.o newmpar_m.o \
+       indices_m.o parm_m.o precis_m.o ind_m.o jimco_m.o jimcc_m.o \
+       jim_utils.o nfft_m.o
 OBJV = veg.o setxyz.o jimcc.o latltoij.o ncdf.o
 
 OBJr = testr.o SUBR_native_4byte_real.o
@@ -26,13 +29,27 @@ read_dem : read_dem.o
 # This section gives the rules for building object modules.
 
 .SUFFIXES:.f90
-ecoread.o:
-	$(FF) -c $(XFLAGS) $(INC) -assume byterecl ecoread.f90
 .f90.o:
 	$(FF) -c $(XFLAGS) $(INC) $<
 .f.o:
 	$(FF) -c $(XFLAGS) $(INC) $<
 
-a.o georead.o jimcc.o jimco.o latltoij.o nterread.o read10km.o read1km.o read250.o read_dem.o read_veg.o setxyz.o terread.o topfilt.o topgencc.o tt.o veg.o veg_read.o :  newmpar.h
+terread.o : ccinterp.o rwork.o
+read250.o : ccinterp.o rwork.o
+read1km.o : ccinterp.o rwork.o
+read10km.o : ccinterp.o rwork.o
+ccinterp.o : ccinterp.f90 setxyz_m.o xyzinfo_m.o latltoij_m.o newmpar_m.o indices_m.o
+latltoij_m.o : latltoij_m.f90 xyzinfo_m.o newmpar_m.o
+setxyz_m.o : setxyz_m.f90 newmpar_m.o indices_m.o parm_m.o precis_m.o ind_m.o xyzinfo_m.o jimco_m.o jimcc_m.o 
+xyzinfo_m.o : xyzinfo_m.f90 precis_m.o
+newmpar_m.o : newmpar_m.f90 
+precis_m.o : precis_m.f90
+indices_m.o : indices_m.f90
+parm_m.o : parm_m.f90 precis_m.o 
+ind_m.o : ind_m.f90 newmpar_m.o 
+jimcc_m.o : jimcc_m.f90 parm_m.o precis_m.o 
+jimco_m.o : jimco_m.f90 precis_m.o jim_utils.o nfft_m.o 
+jim_utils.o : jim_utils.f90 precis_m.o 
+nfft_m.o : nfft_m.f90 precis_m.o 
 
 

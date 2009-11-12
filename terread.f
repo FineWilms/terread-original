@@ -1,45 +1,59 @@
       program terread
 
+      use ccinterp
+      use rwork
+
       parameter (rtd=180.0/3.14159265 )
       parameter ( nter = 37 )
 
-      include 'newmpar.h'
-      include 'dates.h'   ! to pass ds from setxyz
-      include 'map.h'   ! em
-      include 'xyzinfo.h'   ! rlat,rlong
-      include 'indices.h'
-      include 'parm.h'   ! to pass rlong0,rlat0,schmidt  to setxyz
+      !include 'newmpar.h'
+      !include 'dates.h'   ! to pass ds from setxyz
+      !include 'map.h'   ! em
+      !include 'xyzinfo.h'   ! rlat,rlong
+      !include 'indices.h'
+      !include 'parm.h'   ! to pass rlong0,rlat0,schmidt  to setxyz
       logical olam
 
-      include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
+      !include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
 
       logical debug, do1km, okx, oky, do250
+      logical, dimension(:,:), allocatable :: sermask
       character*60 fileout
       character*9 formout
 
       integer nx,ny
       integer i,j
+      integer il,jl
+      integer, dimension(2) :: ccdim,pxy
+      integer, dimension(:), allocatable :: in,ie,is,iw
       character*1 ns,ew
       character*11 file
       character*8 ausfile(nter)
 
       real lons,lats
       real lone,late
+      real rlong0,rlat0,schmidt,dst
+      real, dimension(2) :: lonlat
+      real, dimension(:,:,:), allocatable :: rlld
 
       data debug/.true./
       data do1km/.true./
       data do250/.true./
       data idia/24/,jdia/72/
       data id/2/,jd/2/
+      data il/48/
 
       namelist / topnml / ds, du, tanl, rnml, stl1, stl2, debug
      &  ,luout, fileout, olam, wbd, sbd, dlon, dlat
      &  ,idia, jdia ,rlong0, rlat0, schmidt
-     &  ,do1km, do250, id, jd
+     &  ,do1km, do250, id, jd, il
 
       open ( unit=5,file='top.nml',status='unknown' )
       read ( 5,topnml, end=5 )
  5    write ( 6,topnml )
+
+      jl=6*il 
+      call rworkalloc(il)
 
       if ( do250 ) then
         do n = 1,37
@@ -48,8 +62,18 @@
         enddo ! n = 1,37
       endif
 
-      call setxyz
-
+      ! set-up CC grid
+      ccdim(1)=il
+      ccdim(2)=jl
+      lonlat(1)=rlong0
+      lonlat(2)=rlat0
+      allocate(rlld(ccdim(1),ccdim(2),2),sermask(ccdim(1),ccdim(2)))
+      allocate(in(il*jl),ie(il*jl),is(il*jl),iw(il*jl))
+      call cgg2(rlld,grid,ccdim,lonlat,schmidt,dst,in,ie,is,iw)
+      rlond=rlld(:,:,1)
+      rlatd=rlld(:,:,2)
+      !call setxyz
+      
       gridx=-1.
       rlatx=-999.
       rlonx=-999.
@@ -62,11 +86,7 @@
       !jmin=+999
       do j=1,jl
        do i=1,il
-         n=i+(j-1)*il
-         grid(i,j)=(ds/em(i,j))/1.e3 ! km
-         rlond(i,j)=rlong(n)*rtd
          if(rlond(i,j).gt.180.)rlond(i,j)=rlond(i,j)-360.
-         rlatd(i,j)=rlat(n)*rtd
          gridx=max(gridx,grid(i,j))
          gridn=min(gridn,grid(i,j))
          if ( grid(i,j).lt.20. ) then    ! use 1km when grid spc < 20 km
@@ -80,9 +100,9 @@
            !imin=min(imin,i)
            !write(6,*)i,j,n,grid(i,j),rlond(i,j),rlatd(i,j)
          endif ! grid < 20 km
-         if ( j.eq.49 )write(6,*)i,j,rlond(i,j),rlatd(i,j),grid(i,j)
-         if ( (il+1.lt.j .and. j.lt.2*il) .and. i.eq.25 )
-     &         write(6,*)i,j,rlond(i,j),rlatd(i,j),grid(i,j)
+ !        if ( j.eq.49 )write(6,*)i,j,rlond(i,j),rlatd(i,j),grid(i,j)
+ !        if ( (il+1.lt.j .and. j.lt.2*il) .and. i.eq.25 )
+ !    &         write(6,*)i,j,rlond(i,j),rlatd(i,j),grid(i,j)
          if(rlond(i,j).gt.180.)rlond(i,j)=rlond(i,j)-360.	 
        enddo
       enddo
@@ -158,7 +178,7 @@ c initialize min,max, and sd arrays
 
         if ( okx.and.oky ) then
           write(6,*)"call read250(nx,ny,lons,lats,dl,debug,idia,jdia)"
-          call read250(nx,ny,lons,lats,dl,debug,idia,jdia)
+          call read250(nx,ny,lons,lats,dl,debug,idia,jdia,il)
         endif
 
       enddo ! n
@@ -248,7 +268,7 @@ c initialize min,max, and sd arrays
 ! 9 sept 2004
           clons=lons+dlh
           clats=lats-dlh
-          call read1km(file,nx,ny,clons,clats,debug,idia,jdia)
+          call read1km(file,nx,ny,clons,clats,debug,idia,jdia,il)
           !call read1km(file,nx,ny,lons,lats,debug,idia,jdia)
 ! 9 sept 2004
         endif
@@ -288,7 +308,7 @@ c initialize min,max, and sd arrays
 ! 9 sept 2004
           clons=lons+dlh
           clats=lats-dlh
-          call read1km(file,nx,ny,clons,clats,debug,idia,jdia)
+          call read1km(file,nx,ny,clons,clats,debug,idia,jdia,il)
           !call read1km(file,nx,ny,lons,lats,debug,idia,jdia)
 ! 9 sept 2004
         endif
@@ -348,7 +368,7 @@ c initialize min,max, and sd arrays
 !***********************************************************************
 
       write(6,*)"Now calling read10km"
-      call read10km(debug,do1km)
+      call read10km(debug,do1km,il)
 
 !================================
 
@@ -482,6 +502,10 @@ c initialize min,max, and sd arrays
       Do j=96,49,-1
         Write(6,'(48i2)')(nint(zss(i,j)/10.),i=1,48)
       End Do
+      Write(6,*) 'final sd/10'
+      Do j=96,49,-1
+        Write(6,'(48i2)')(nint(tsd(i,j)/10.),i=1,48)
+      End Do
 
       write(luout,'(i3,i4,2f7.2,f6.3,f8.0,''  orog-mask-var'')')
      &                           il,jl,rlong0,rlat0,schmidt,ds
@@ -519,6 +543,10 @@ c     write out std.dev of top. to formatted file
       end do ! j=1,jl
       call nc2out(zss,il,jl,1,1.,idnc,"inum","inum","none",0.,2000.)
       call ncsnc(idnc,ier)
+      
+      deallocate(rlld,sermask)
+      deallocate(in,ie,is,iw)
+      call rworkdealloc
 
       stop
       end

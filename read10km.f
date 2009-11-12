@@ -1,7 +1,12 @@
-      subroutine read10km(debug,do1km)
+      subroutine read10km(debug,do1km,il)
+
+      use ccinterp
+      use rwork
 
       parameter ( nx=4320, ny=2160 )
 
+      integer, intent(in) :: il
+      integer jl
       !integer izs(7200)
       integer izs(nx)
       real dl
@@ -10,8 +15,10 @@
 
       logical debug,do1km
 
-      include 'newmpar.h'
-      include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
+      !include 'newmpar.h'
+      !include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
+
+      jl=6*il
 
       !nx=4320
       !ny=2160
@@ -38,14 +45,15 @@
           izsmaxj=max(izsmaxj,izs(i))
           izsminj=min(izsminj,izs(i))
 
-          call latltoij(aglon,aglat,alci,alcj,nface)  ! con-cubic
+          !call latltoij(aglon,aglat,alci,alcj,nface)  ! con-cubic
+          call lltoijmod(aglon,aglat,alci,alcj,nface)  ! con-cubic
           lci = nint(alci)
           lcj = nint(alcj)
 ! convert to "double" (i,j) notation
           lcj=lcj+nface*il
           !write(6,*)i,j,aglon,aglat,lci,lcj
 
-          if ( inum(lci,lcj) .eq. 0 ) then
+          !if ( inum(lci,lcj) .eq. 0 ) then ! MJT bug fix
 
 !         if ( .not.do1km .or. id1km(lci,lcj).lt.1 ) then
 
@@ -82,7 +90,7 @@
              endif  ! debug
 
             endif ! (lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl)then
-          endif ! ( inum(i,j) .lt. 1 ) then
+          !endif ! ( inum(i,j) .lt. 1 ) then ! MJT bug fix
 
 !-----------------------------------------------------------------------
 

@@ -1,6 +1,11 @@
 c=======================================================================
-      subroutine read1km(file,nx,ny,lons,lats,debug,idia,jdia)
+      subroutine read1km(file,nx,ny,lons,lats,debug,idia,jdia,il)
 
+      use ccinterp
+      use rwork
+
+      integer, intent(in) :: il
+      integer jl
       character*11 file
       integer*2 izs(7200)
       real dl
@@ -10,8 +15,10 @@ c=======================================================================
 
       logical debug,ok
 
-      include 'newmpar.h'
-      include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
+      !include 'newmpar.h'
+      !include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
+
+      jl=6*il
 
       write(6,*)"read1km file,nx,ny=",file,nx,ny
 
@@ -78,7 +85,8 @@ c=======================================================================
 !-----------------------------------------------------------------------
 
 ! compute model grid i,j
-           call latltoij(aglon,aglat,alci,alcj,nface)  ! con-cubic
+           !call latltoij(aglon,aglat,alci,alcj,nface)  ! con-cubic
+           call lltoijmod(aglon,aglat,alci,alcj,nface)  ! con-cubic
            lci = nint(alci)
            lcj = nint(alcj)
 ! convert to "double" (i,j) notation

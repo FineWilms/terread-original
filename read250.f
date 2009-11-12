@@ -1,5 +1,10 @@
-      subroutine read250(nx,ny,lons,lats,dl,debug,idia,jdia)
+      subroutine read250(nx,ny,lons,lats,dl,debug,idia,jdia,il)
 
+      use rwork
+      use ccinterp
+
+      integer, intent(in) :: il
+      integer jl
       integer*2 zz(3360*2800)
       real dl
       integer nrecl
@@ -10,8 +15,10 @@
 
       data ow/.false./
 
-      include 'newmpar.h'
-      include 'rwork.h'
+      !include 'newmpar.h'
+      !include 'rwork.h'
+
+      jl=6*il
 
       write(6,*)"read250 nx,ny,lons,lats,dl=",nx,ny,lons,lats,dl,debug
 
@@ -49,7 +56,8 @@
 !-----------------------------------------------------------------------
 
 ! compute model grid i,j
-           call latltoij(aglon,aglat,alci,alcj,nface)  ! con-cubic/octagon
+           !call latltoij(aglon,aglat,alci,alcj,nface)  ! con-cubic/octagon
+           call lltoijmod(aglon,aglat,alci,alcj,nface)  ! con-cubic/octagon
            lci = nint(alci)
            lcj = nint(alcj)
 ! convert to "double" (i,jg) notation
