@@ -70,6 +70,7 @@
       allocate(rlld(ccdim(1),ccdim(2),2),sermask(ccdim(1),ccdim(2)))
       allocate(in(il*jl),ie(il*jl),is(il*jl),iw(il*jl))
       call cgg2(rlld,grid,ccdim,lonlat,schmidt,dst,in,ie,is,iw)
+      ds=dst
       rlond=rlld(:,:,1)
       rlatd=rlld(:,:,2)
       !call setxyz

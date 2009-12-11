@@ -172,6 +172,10 @@ Do j=1,ecodim(2)
     rlld(i,j,1)=rlong(n)*180./pi
     If (rlld(i,j,1).GT.180.) rlld(i,j,1)=rlld(i,j,1)-360.
     rlld(i,j,2)=rlat(n)*180./pi
+    in(i,j)=i_n(n)
+    ie(i,j)=i_e(n)
+    is(i,j)=i_s(n)
+    iw(i,j)=i_w(n)
   End Do
 End Do
 
