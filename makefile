@@ -3,7 +3,7 @@
 # Specify any desired preprocessor or compiler flags here; -R2 for .L files.
 
 FF = ifort
-XFLAGS = -O 
+XFLAGS = -O -assume byterecl
 LIBS = -L /tools/netcdf/3.6.0-p1/lib -lnetcdf
 INC = -I /tools/netcdf/3.6.0-p1/include
 

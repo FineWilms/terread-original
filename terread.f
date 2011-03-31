@@ -16,7 +16,7 @@
 
       !include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
 
-      logical debug, do1km, okx, oky, do250
+      logical debug, do1km, okx, oky, do250, dosrtm
       logical, dimension(:,:), allocatable :: sermask
       character*60 fileout
       character*9 formout
@@ -24,29 +24,38 @@
       integer nx,ny
       integer i,j
       integer il,jl
+      integer ii,jj,kk,ll,nface,lci,lcj
       integer, dimension(2) :: ccdim,pxy
       integer, dimension(:), allocatable :: in,ie,is,iw
+      integer*2, dimension(1201) :: idata
       character*1 ns,ew
       character*11 file
       character*8 ausfile(nter)
+      character*1 esg,nsg
+      character*2 ncord
+      character*3 ecord
+      character*11 fname
 
       real lons,lats
       real lone,late
       real rlong0,rlat0,schmidt,dst
+      real zs,aglon,aglat,alci,alcj
       real, dimension(2) :: lonlat
       real, dimension(:,:,:), allocatable :: rlld
 
       data debug/.true./
       data do1km/.true./
       data do250/.true./
+      data dosrtm/.false./
       data idia/24/,jdia/72/
       data id/2/,jd/2/
       data il/48/
+      data ds/0./
 
       namelist / topnml / ds, du, tanl, rnml, stl1, stl2, debug
      &  ,luout, fileout, olam, wbd, sbd, dlon, dlat
      &  ,idia, jdia ,rlong0, rlat0, schmidt
-     &  ,do1km, do250, id, jd, il
+     &  ,do1km, do250, dosrtm, id, jd, il
 
       open ( unit=5,file='top.nml',status='unknown' )
       read ( 5,topnml, end=5 )
@@ -151,6 +160,80 @@ c initialize min,max, and sd arrays
       enddo
       
       write(6,*) 'inum(1,1)=',inum(0,0)
+
+      if ( dosrtm ) then
+        write(6,*) "Process dosrtm"
+      
+        do ii=-180,179
+	  write(6,*) "Searching ... ",ii
+	  if (ii.lt.0) then
+	    esg='W'
+	  else
+	    esg='E'
+	  end if
+          write(ecord,'(I3.3)') abs(ii)
+	  do jj=-90,89
+	    if (jj.lt.0) then
+	      nsg='S'
+	    else
+	      nsg='N'
+	    end if
+	    write(ncord,'(I2.2)') abs(jj)
+	    fname=nsg//ncord//esg//ecord//'.hgt'
+	    open (13,file=fname,access='direct',form='unformatted',
+     &            convert='big_endian',iostat=ierr,recl=2402,
+     &            status='old')
+	    
+	    if (ierr.eq.0) then
+	    
+	      lons=real(ii)
+	      lone=lons+1.
+	      lats=real(jj)
+	      late=lats+1.
+
+              okx = .false.
+              okx = okx .or. (lons.ge.rlonn .and. lons.le.rlonx)
+              okx = okx .or. (lone.ge.rlonn .and. lone.le.rlonx)
+              okx = okx .or. (lons.le.rlonn .and. lone.ge.rlonx)
+              oky = .false.
+              oky = oky .or. (lats.ge.rlatn .and. lats.le.rlatx) ! start lat in area
+              oky = oky .or. (late.ge.rlatn .and. late.le.rlatx) !  end  lat in area
+              oky = oky .or. (lats.le.rlatn .and. late.ge.rlatx) ! grid encompasses hr reg
+              oky = oky .or. (lats.ge.rlatn .and. late.le.rlatx) ! grid within hr reg
+	    
+	      if (okx.and.oky) then
+	        write(6,*) "Reading ",trim(fname)
+		do kk=1,1200 ! ignore extra overlap row
+                  read(13,rec=kk) idata
+		  aglat=late-real(kk-1)/1200.
+		  do ll=1,1200
+		    if (idata(ll).gt.-32768) then
+                      aglon=lons+real(ll-1)/1200.
+                      call lltoijmod(aglon,aglat,alci,alcj,nface)
+                      lci = nint(alci)
+                      lcj = nint(alcj)
+                      lcj=lcj+nface*il		  
+		    
+		      zs=real(idata(ll))
+                      if( zs.lt.1. ) then
+                        almsk(lci,lcj) = almsk(lci,lcj) + 0.
+                      else
+                        almsk(lci,lcj) = almsk(lci,lcj) + 1.
+                      end if  ! zs<-1000
+                      inum(lci,lcj) = inum(lci,lcj) + 1 ! accumulate number of pnts in grid box
+                      zss(lci,lcj) = zss(lci,lcj) + zs ! accumulate topog. pnts
+                      tmax(lci,lcj)=max(tmax(lci,lcj),zs) ! find max/min topog. pnts in grid box
+                      tmin(lci,lcj)=min(tmin(lci,lcj),zs)
+                      tsd(lci,lcj)=tsd(lci,lcj)+zs**2 ! sum of squares for sd calc.
+                    end if
+		  end do
+	        end do
+	      end if
+	      close(13)
+	    end if
+	  end do
+	end do
+      end if
       
 !================================
       if ( do250 ) then
@@ -508,7 +591,7 @@ c initialize min,max, and sd arrays
         Write(6,'(48i2)')(nint(tsd(i,j)/10.),i=1,48)
       End Do
 
-      write(luout,'(i3,i4,2f7.2,f6.3,f8.0,''  orog-mask-var'')')
+      write(luout,'(i3,i5,2f10.3,f6.3,f8.0,''  orog-mask-var'')')
      &                           il,jl,rlong0,rlat0,schmidt,ds
 !      write(luout,*)il,jl,rlong0,rlat0,schmidt,ds,"orog-mask-var"
 

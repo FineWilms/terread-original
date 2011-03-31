@@ -29,7 +29,7 @@ c=======================================================================
 !      open(21,file=file,access='direct',form='unformatted',recl=nrecl)
 
 ! on jjk-as
-      nrecl = nx/2
+      nrecl = nx*2
       open(CONVERT='BIG_ENDIAN',unit=21,file=file,access='direct'
      &            ,form='unformatted',recl=nrecl)
 
@@ -45,7 +45,7 @@ c=======================================================================
 
         !if ( ok ) write(6,*)"lat,latn,latx,lons=",aglat,rlatn,rlatx,lons
 
-         read(21,rec=j) (izs(i),i=1,nx)
+         read(21,rec=j) izs(1:nx)
          !rmax=-1.e35
          !rmin=+1.e35
          !do i=1,nx
