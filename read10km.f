@@ -56,6 +56,7 @@
           !if ( inum(lci,lcj) .eq. 0 ) then ! MJT bug fix
 
 !         if ( .not.do1km .or. id1km(lci,lcj).lt.1 ) then
+          if (grid(lci,lcj).gt.20..or..not.do1km) then
 
             if(lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl)then
 ! all other points
@@ -90,6 +91,7 @@
              endif  ! debug
 
             endif ! (lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl)then
+	  endif !if (grid(lci,lcj).gt.20..or..not.do1km) then
           !endif ! ( inum(i,j) .lt. 1 ) then ! MJT bug fix
 
 !-----------------------------------------------------------------------
