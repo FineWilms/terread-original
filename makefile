@@ -4,27 +4,19 @@
 
 FF = ifort
 XFLAGS = -O -assume byterecl
-LIBS = -L /tools/netcdf/3.6.0-p1/lib -lnetcdf
-INC = -I /tools/netcdf/3.6.0-p1/include
+LIBS = -L $(NETCDF_ROOT)/lib -L $(HDF5_HOME)/lib -lnetcdf -lnetcdff -lhdf5 -lhdf5_hl
+INC = -I $(NETCDF_ROOT)/include
 
 OBJT = terread.o read_ht.o read1km.o read250.o read10km.o amap.o rwork.o ncdf.o \
        ccinterp.o latltoij_m.o setxyz_m.o xyzinfo_m.o newmpar_m.o \
        indices_m.o parm_m.o precis_m.o ind_m.o jimco_m.o jimcc_m.o \
        jim_utils.o nfft_m.o
-OBJV = veg.o setxyz.o jimcc.o latltoij.o ncdf.o
-
-OBJr = testr.o SUBR_native_4byte_real.o
 
 terread :$(OBJT)
 	$(FF) $(XFLAGS) $(OBJT) $(LIBS) -o terread
-veg :$(OBJV)
-	$(FF) $(XFLAGS) $(OBJV) $(LIBS) -o veg.80
-georead :$(OBJS)
-	$(FF) $(XFLAGS) $(OBJS) $(LIBS) -o georead.new
-testr : $(OBJr)
-	$(FF) $(XFLAGS) $(OBJr) -o testr
-read_dem : read_dem.o
-	$(FF) $(XFLAGS) read_dem.f -o read_dem
+
+clean:
+	rm *.o *.mod core terread
 
 # This section gives the rules for building object modules.
 
