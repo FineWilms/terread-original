@@ -2,6 +2,21 @@
 
       use ccinterp
       use rwork
+      
+      implicit none
+
+      include 'netcdf.inc'
+      
+      real rtd,dl,dlh,clons,clats
+      real ds,gridn,gridx
+      real dlon,dlat
+      real sbd,wbd,stl1,stl2
+      real du,tanl,rnml
+      integer nter,n
+      integer idia,jdia,id,jd,numzer
+      integer imin,imax,jmin,jmax,iq,iq2
+      integer ier,ierr,idnc
+      integer luout
 
       parameter (rtd=180.0/3.14159265 )
       parameter ( nter = 37 )
@@ -137,11 +152,12 @@
       enddo
 
 c     nested model topography (output)
-      write(6,*) 'open',luout,fileout
-      open(luout,file=fileout,form='formatted',status='unknown')
+!      write(6,*) 'open',luout,fileout
+!      open(luout,file=fileout,form='formatted',status='unknown')
 
 ! netcdf file
-      call ncdf_setup("zsm.nc",idnc,3,il,jl,1,20020101,0000)
+      call ncdf_setup(fileout,idnc,3,il,jl,1,20020101,0000,
+     &                rlong0,rlat0,schmidt)
       call nc2out(grid ,il,jl,1,1.,idnc,"grid","grid","km",0.,5000.)
       call nc2out(rlond,il,jl,1,1.,idnc,"lon","lon","degrees",0.,360.)
       call nc2out(rlatd,il,jl,1,1.,idnc,"lat","lat","degrees",-90.,90.)
@@ -591,9 +607,9 @@ c initialize min,max, and sd arrays
         Write(6,'(48i2)')(nint(tsd(i,j)/10.),i=1,48)
       End Do
 
-      write(luout,'(i3,i5,2f10.3,f6.3,f8.0,''  orog-mask-var'')')
-     &                           il,jl,rlong0,rlat0,schmidt,ds
-!      write(luout,*)il,jl,rlong0,rlat0,schmidt,ds,"orog-mask-var"
+!      write(luout,'(i3,i5,2f10.3,f6.3,f8.0,''  orog-mask-var'')')
+!     &                           il,jl,rlong0,rlat0,schmidt,ds
+!!      write(luout,*)il,jl,rlong0,rlat0,schmidt,ds,"orog-mask-var"
 
       call nc2out(zss  ,il,jl,1,1.,idnc,"zs","zs","m",-100.,30000.)
       call nc2out(rmsk ,il,jl,1,1.,idnc,"lsm","lsm","none",-1.,1.)
@@ -607,17 +623,17 @@ c     write out g*zs(il,jl) to formatted file
           zss(i,j)=9.80616*zss(i,j)
         end do ! i=1,il
       end do ! j=1,jl
-      ilout=min(il,30)
-      write (formout,'(''('',i3,''f7.0)'')')ilout   !  i.e. (<il>f7.0)
-      write(luout,formout) zss
+!      ilout=min(il,30)
+!      write (formout,'(''('',i3,''f7.0)'')')ilout   !  i.e. (<il>f7.0)
+!      write(luout,formout) zss
 
 c     write out land/sea mask to formatted file
-      write (formout,'(''('',i3,''f4.1)'')')ilout   !  i.e. (<il>f4.1)
-      write(luout,formout) rmsk
+!      write (formout,'(''('',i3,''f4.1)'')')ilout   !  i.e. (<il>f4.1)
+!      write(luout,formout) rmsk
 
 c     write out std.dev of top. to formatted file
-      write (formout,'(''('',i3,''f6.0)'')')ilout   !  i.e. (<il>f6.0)
-      write(luout,formout) tsd
+!      write (formout,'(''('',i3,''f6.0)'')')ilout   !  i.e. (<il>f6.0)
+!      write(luout,formout) tsd
       print *,'zss, rmsk and tsd written to unit',luout,' for il=',il
 
       do j=1,jl

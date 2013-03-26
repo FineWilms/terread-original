@@ -3,7 +3,7 @@
 # Specify any desired preprocessor or compiler flags here; -R2 for .L files.
 
 FF = ifort
-XFLAGS = -O -assume byterecl
+XFLAGS = -O -fpp -assume byterecl
 LIBS = -L $(NETCDF_ROOT)/lib -L $(HDF5_HOME)/lib -lnetcdf -lnetcdff -lhdf5 -lhdf5_hl
 INC = -I $(NETCDF_ROOT)/include
 

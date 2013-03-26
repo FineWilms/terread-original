@@ -1,6 +1,12 @@
-      subroutine ncdf_setup(ofile,idnc,ndim,il,jl,kl,kdate,ktime)
+      subroutine ncdf_setup(ofile,idnc,ndim,il,jl,kl,kdate,ktime,
+     &                      rlong0,rlat0,schmidt)
+
+      implicit none
 
       include "netcdf.inc"   ! comment out on atmos
+      
+      integer ics,icmi,ich,icd
+      integer icy,icm
 
       character*(*) ofile
 * netCDF id
@@ -11,13 +17,19 @@
 * variable ids
       integer idil,idjl,idkl,idnt
 * input variables
+      integer kdate,ktime
       integer ndim,il,jl,kl
+      real rlong0,rlat0,schmidt
       character timorg*20
       character*3 month(12)
       data month/'jan','feb','mar','apr','may','jun'
      &          ,'jul','aug','sep','oct','nov','dec'/
 
+#ifdef usenc3
       idnc = nccre ( ofile,ncclob,ier )
+#else
+      ier=nf_create(ofile,NF_NETCDF4,idnc)
+#endif
       print *,'###### create netcdf idnc,ndim,file=',idnc,ndim,ofile
 
 c define dimensions
@@ -61,6 +73,10 @@ c define variables
         print *,'timorg=',timorg
         call ncaptc(idnc,idnt,'time_origin',NCCHAR,20,timorg,ier)
       endif ! ( ndim.ge.3 ) then
+
+      ier=nf_put_att_real(idnc,nf_global,'lon0',nf_real,1,rlong0)
+      ier=nf_put_att_real(idnc,nf_global,'lat0',nf_real,1,rlat0)
+      ier=nf_put_att_real(idnc,nf_global,'schmidt',nf_real,1,schmidt)
 
       call ncendf(idnc,ier)
 
