@@ -123,7 +123,7 @@ c in netcdf format
 
       save vrange
 
-      write(6,'("*** nc2out *** idnc,nt,thr,sname=",2i4,f7.2,a6)')
+      write(6,'("*** nc2out *** idnc,nt,thr,sname=",2i8,f7.2,a6)')
      &          idnc,nt,thr,sname
 
       if ( debug ) then

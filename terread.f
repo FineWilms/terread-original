@@ -32,13 +32,14 @@
       !include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
 
       logical debug, do1km, okx, oky, do250, dosrtm
+      logical netout
       logical, dimension(:,:), allocatable :: sermask
       character*60 fileout
       character*9 formout
 
       integer nx,ny
       integer i,j
-      integer il,jl
+      integer il,jl,ilout
       integer ii,jj,kk,ll,nface,lci,lcj
       integer, dimension(2) :: ccdim,pxy
       integer, dimension(:), allocatable :: in,ie,is,iw
@@ -62,6 +63,7 @@
       data do1km/.true./
       data do250/.true./
       data dosrtm/.false./
+      data netout/.false./
       data idia/24/,jdia/72/
       data id/2/,jd/2/
       data il/48/
@@ -70,7 +72,7 @@
       namelist / topnml / ds, du, tanl, rnml, stl1, stl2, debug
      &  ,luout, fileout, olam, wbd, sbd, dlon, dlat
      &  ,idia, jdia ,rlong0, rlat0, schmidt
-     &  ,do1km, do250, dosrtm, id, jd, il
+     &  ,do1km, do250, dosrtm, id, jd, il, netout
 
       open ( unit=5,file='top.nml',status='unknown' )
       read ( 5,topnml, end=5 )
@@ -152,12 +154,17 @@
       enddo
 
 c     nested model topography (output)
-!      write(6,*) 'open',luout,fileout
-!      open(luout,file=fileout,form='formatted',status='unknown')
+      if (.not.netout) then
+        write(6,*) 'open',luout,fileout
+        open(luout,file=fileout,form='formatted',status='unknown')
+        call ncdf_setup('zsm.nc',idnc,3,il,jl,1,20020101,0000,
+     &                rlong0,rlat0,schmidt)
+      else
+        call ncdf_setup(fileout,idnc,3,il,jl,1,20020101,0000,
+     &                rlong0,rlat0,schmidt)
+      end if
 
 ! netcdf file
-      call ncdf_setup(fileout,idnc,3,il,jl,1,20020101,0000,
-     &                rlong0,rlat0,schmidt)
       call nc2out(grid ,il,jl,1,1.,idnc,"grid","grid","km",0.,5000.)
       call nc2out(rlond,il,jl,1,1.,idnc,"lon","lon","degrees",0.,360.)
       call nc2out(rlatd,il,jl,1,1.,idnc,"lat","lat","degrees",-90.,90.)
@@ -175,7 +182,7 @@ c initialize min,max, and sd arrays
        enddo
       enddo
       
-      write(6,*) 'inum(1,1)=',inum(0,0)
+      write(6,*) 'inum(1,1)=',inum(1,1)
 
       if ( dosrtm ) then
         write(6,*) "Process dosrtm"
@@ -607,9 +614,10 @@ c initialize min,max, and sd arrays
         Write(6,'(48i2)')(nint(tsd(i,j)/10.),i=1,48)
       End Do
 
-!      write(luout,'(i3,i5,2f10.3,f6.3,f8.0,''  orog-mask-var'')')
-!     &                           il,jl,rlong0,rlat0,schmidt,ds
-!!      write(luout,*)il,jl,rlong0,rlat0,schmidt,ds,"orog-mask-var"
+      if (.not.netout) then
+        write(luout,'(i3,i5,2f10.3,f6.3,f8.0,''  orog-mask-var'')')
+     &                           il,jl,rlong0,rlat0,schmidt,ds
+      end if
 
       call nc2out(zss  ,il,jl,1,1.,idnc,"zs","zs","m",-100.,30000.)
       call nc2out(rmsk ,il,jl,1,1.,idnc,"lsm","lsm","none",-1.,1.)
@@ -623,17 +631,19 @@ c     write out g*zs(il,jl) to formatted file
           zss(i,j)=9.80616*zss(i,j)
         end do ! i=1,il
       end do ! j=1,jl
-!      ilout=min(il,30)
-!      write (formout,'(''('',i3,''f7.0)'')')ilout   !  i.e. (<il>f7.0)
-!      write(luout,formout) zss
+      if (.not.netout) then
+        ilout=min(il,30)
+        write (formout,'(''('',i3,''f7.0)'')')ilout   !  i.e. (<il>f7.0)
+        write(luout,formout) zss
 
 c     write out land/sea mask to formatted file
-!      write (formout,'(''('',i3,''f4.1)'')')ilout   !  i.e. (<il>f4.1)
-!      write(luout,formout) rmsk
+        write (formout,'(''('',i3,''f4.1)'')')ilout   !  i.e. (<il>f4.1)
+        write(luout,formout) rmsk
 
 c     write out std.dev of top. to formatted file
-!      write (formout,'(''('',i3,''f6.0)'')')ilout   !  i.e. (<il>f6.0)
-!      write(luout,formout) tsd
+        write (formout,'(''('',i3,''f6.0)'')')ilout   !  i.e. (<il>f6.0)
+        write(luout,formout) tsd
+      end if
       print *,'zss, rmsk and tsd written to unit',luout,' for il=',il
 
       do j=1,jl
@@ -643,6 +653,8 @@ c     write out std.dev of top. to formatted file
       end do ! j=1,jl
       call nc2out(zss,il,jl,1,1.,idnc,"inum","inum","none",0.,2000.)
       call ncsnc(idnc,ier)
+      
+      if (.not.netout) close(luout)
       
       deallocate(rlld,sermask)
       deallocate(in,ie,is,iw)
