@@ -114,12 +114,11 @@ c in netcdf format
 * data variables
       real data(il,jl)
 * packing variables
-      parameter (nx=4800,ny=6000)
-      integer*2 ipack(nx*ny)
+      integer*2 ipack(il*jl)
       integer*2 vrange(2)
       data vrange/-32500,32500/
 * dim variables
-      real xdim(nx),ydim(ny)
+      real xdim(il),ydim(jl)
 
       save vrange
 
@@ -133,10 +132,6 @@ c in netcdf format
         print *,'sx,sn=',dx,dn
       endif ! debug
 
-      if ( il*jl .gt. nx*ny ) then
-        print *,'il*jl=',il*jl,' too big in nc2out'
-        stop
-      endif
 
 c***********************************************************************
       if ( nt.eq.1 ) then
