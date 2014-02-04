@@ -2,10 +2,10 @@ module rwork
 
 private
 public rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn, &
-       rworkalloc,rworkdealloc
+       dum,rworkalloc,rworkdealloc
 
 real, save :: rlonx,rlonn,rlatx,rlatn
-real, dimension(:,:), allocatable, save :: rmsk,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid
+real, dimension(:,:), allocatable, save :: rmsk,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,dum
 integer, dimension(:,:), allocatable, save :: inum,inumx,id1km
 
 contains
@@ -21,6 +21,7 @@ jl=6*il
 
 allocate(rmsk(il,jl),zss(il,jl),almsk(il,jl),tmax(il,jl),tmin(il,jl),tsd(il,jl))
 allocate(rlatd(il,jl),rlond(il,jl),grid(il,jl),inum(il,jl),inumx(il,jl),id1km(il,jl))
+allocate(dum(il,jl))
 
 return
 end subroutine rworkalloc
@@ -31,6 +32,7 @@ implicit none
 
 deallocate(rmsk,zss,almsk,tmax,tmin,tsd)
 deallocate(rlatd,rlond,grid,inum,inumx,id1km)
+deallocate(dum)
 
 return
 end subroutine rworkdealloc

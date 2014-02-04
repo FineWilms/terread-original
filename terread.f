@@ -32,7 +32,7 @@
       !include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
 
       logical debug, do1km, okx, oky, do250, dosrtm
-      logical netout
+      logical netout, topfilt
       logical, dimension(:,:), allocatable :: sermask
       character*60 fileout
       character*9 formout
@@ -58,12 +58,13 @@
       real zs,aglon,aglat,alci,alcj
       real, dimension(2) :: lonlat
       real, dimension(:,:,:), allocatable :: rlld
-
+      
       data debug/.true./
       data do1km/.true./
       data do250/.true./
       data dosrtm/.false./
       data netout/.false./
+      data topfilt/.false./
       data idia/24/,jdia/72/
       data id/2/,jd/2/
       data il/48/
@@ -72,7 +73,7 @@
       namelist / topnml / ds, du, tanl, rnml, stl1, stl2, debug
      &  ,luout, fileout, olam, wbd, sbd, dlon, dlat
      &  ,idia, jdia ,rlong0, rlat0, schmidt
-     &  ,do1km, do250, dosrtm, id, jd, il, netout
+     &  ,do1km, do250, dosrtm, id, jd, il, netout, topfilt
 
       open ( unit=5,file='top.nml',status='unknown' )
       read ( 5,topnml, end=5 )
@@ -600,6 +601,19 @@ c initialize min,max, and sd arrays
         enddo ! j
       endif         ! (numzer.gt.0)
       if(numzer.gt.0)go to 2
+      
+      if (topfilt) then
+        write(6,*) "Filter orography"
+        dum=zss
+        do j=1,jl
+          do i=1,il
+            iq=i+(j-1)*il
+            zss(i,j)=0.125*(dum(in(iq),1)+dum(is(iq),1)
+     &                     +dum(ie(iq),1)+dum(iw(iq),1))
+     &              +0.5*dum(iq,1)
+          end do
+        end do
+      end if
 
       Write(6,*) 'final rmsk'
       Do j=96,49,-1
