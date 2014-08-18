@@ -41,7 +41,8 @@
       do j = 1, nlong
         ival = 256 * ichar(buf(1,j)) + ichar(buf(2,j))
         if (ival .ge. X'8000') then ! sign extend
-           ival = ival .or. X'FFFFFFFFFFFF0000'
+           !ival = ival .or. X'FFFFFFFFFFFF0000'
+           ival = ior( ival, X'FFFFFFFFFFFF0000' )
         end if
         ht(j) = ival
       end do

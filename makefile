@@ -4,7 +4,7 @@
 
 FF = ifort
 XFLAGS = -O -fpp -assume byterecl
-LIBS = -L $(NETCDF_ROOT)/lib -L $(HDF5_HOME)/lib -lnetcdf -lnetcdff -lhdf5 -lhdf5_hl
+LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
 INC = -I $(NETCDF_ROOT)/include
 
 OBJT = terread.o read_ht.o read1km.o read250.o read10km.o amap.o rwork.o ncdf.o \
