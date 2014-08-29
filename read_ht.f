@@ -18,7 +18,7 @@
       character    buf(2,nlong) ! buffer
       integer      i ! subscript
       integer      ios ! i/o status
-      integer*8    ival ! int. value
+      integer(kind=8) ival ! int. value
       integer      j ! subscript
       logical      new ! true 1st call
       save new
@@ -41,8 +41,9 @@
       do j = 1, nlong
         ival = 256 * ichar(buf(1,j)) + ichar(buf(2,j))
         if (ival .ge. X'8000') then ! sign extend
-           !ival = ival .or. X'FFFFFFFFFFFF0000'
-           ival = ior( ival, X'FFFFFFFFFFFF0000' )
+           write(6,*) "ERROR: Integer too big"
+           stop
+           !ival = ior( ival, X'FFFFFFFFFFFF0000' )
         end if
         ht(j) = ival
       end do
