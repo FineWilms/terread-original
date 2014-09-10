@@ -40,9 +40,8 @@
 
       do j = 1, nlong
         ival = 256 * ichar(buf(1,j)) + ichar(buf(2,j))
-        if (ival .ge. X'8000') then ! sign extend
-           write(6,*) "ERROR: Integer too big"
-           stop
+        if (ival .ge. 32768 ) then ! sign extend
+           ival = 65536 - ival
            !ival = ior( ival, X'FFFFFFFFFFFF0000' )
         end if
         ht(j) = ival
