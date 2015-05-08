@@ -75,6 +75,11 @@
      &  ,idia, jdia ,rlong0, rlat0, schmidt
      &  ,do1km, do250, dosrtm, id, jd, il, netout, topfilt
 
+#ifndef stacklimit
+      ! For linux only - removes stacklimit on all processors
+      call setstacklimit(-1)
+#endif      
+      
       open ( unit=5,file='top.nml',status='old' )
       read ( 5,topnml, end=5 )
  5    write ( 6,topnml )
