@@ -19,5 +19,6 @@
 /read_ht.f -text
 /rwork.f90 -text
 /setxyz_m.f90 -text
+/stacklimit.c -text
 /terread.f -text
 /xyzinfo_m.f90 -text
