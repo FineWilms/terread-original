@@ -70,10 +70,10 @@
       data il/48/
       data ds/0./
 
-      namelist / topnml / ds, du, tanl, rnml, stl1, stl2, debug
-     &  ,luout, fileout, olam, wbd, sbd, dlon, dlat
-     &  ,idia, jdia ,rlong0, rlat0, schmidt
-     &  ,do1km, do250, dosrtm, id, jd, il, netout, topfilt
+      namelist / topnml / ds, du, tanl, rnml, stl1, stl2, debug &
+        ,luout, fileout, olam, wbd, sbd, dlon, dlat             &
+        ,idia, jdia ,rlong0, rlat0, schmidt                     &
+        ,do1km, do250, dosrtm, id, jd, il, netout, topfilt
 
 #ifndef stacklimit
       ! For linux only - removes stacklimit on all processors
@@ -134,8 +134,7 @@
            !write(6,*)i,j,n,grid(i,j),rlond(i,j),rlatd(i,j)
          endif ! grid < 20 km
  !        if ( j.eq.49 )write(6,*)i,j,rlond(i,j),rlatd(i,j),grid(i,j)
- !        if ( (il+1.lt.j .and. j.lt.2*il) .and. i.eq.25 )
- !    &         write(6,*)i,j,rlond(i,j),rlatd(i,j),grid(i,j)
+ !        if ( (il+1.lt.j .and. j.lt.2*il) .and. i.eq.25 ) write(6,*)i,j,rlond(i,j),rlatd(i,j),grid(i,j)
          if(rlond(i,j).gt.180.)rlond(i,j)=rlond(i,j)-360.	 
        enddo
       enddo
@@ -159,15 +158,13 @@
        write(6,'(48i2)')(inumx(i,j),i=1,48)
       enddo
 
-c     nested model topography (output)
+!     nested model topography (output)
       if (.not.netout) then
         write(6,*) 'open',luout,fileout
         open(luout,file=fileout,form='formatted',status='unknown')
-        call ncdf_setup('zsm.nc',idnc,3,il,jl,1,20020101,0000,
-     &                rlong0,rlat0,schmidt)
+        call ncdf_setup('zsm.nc',idnc,3,il,jl,1,20020101,0000,rlong0,rlat0,schmidt)
       else
-        call ncdf_setup(fileout,idnc,3,il,jl,1,20020101,0000,
-     &                rlong0,rlat0,schmidt)
+        call ncdf_setup(fileout,idnc,3,il,jl,1,20020101,0000,rlong0,rlat0,schmidt)
       end if
 
 ! netcdf file
@@ -176,7 +173,7 @@ c     nested model topography (output)
       call nc2out(rlatd,il,jl,1,1.,idnc,"lat","lat","degrees",-90.,90.)
       call ncsnc(idnc,ier)
 
-c initialize min,max, and sd arrays
+! initialize min,max, and sd arrays
       do j=1,jl
        do i=1,il
         tmin(i,j)=99999.
@@ -209,9 +206,7 @@ c initialize min,max, and sd arrays
 	    end if
 	    write(ncord,'(I2.2)') abs(jj)
 	    fname=nsg//ncord//esg//ecord//'.hgt'
-	    open (13,file=fname,access='direct',form='unformatted',
-     &            convert='big_endian',iostat=ierr,recl=2402,
-     &            status='old')
+	    open (13,file=fname,access='direct',form='unformatted',convert='big_endian',iostat=ierr,recl=2402,status='old')
 	    
 	    if (ierr.eq.0) then
 	    
@@ -286,8 +281,7 @@ c initialize min,max, and sd arrays
         oky = oky .or. (lats.le.rlatn .and. late.ge.rlatx) ! grid encompasses hr reg
         oky = oky .or. (lats.ge.rlatn .and. late.le.rlatx) ! grid within hr reg
 
-        write(6,'("lons,lone=",2f6.1," lats,late=",2f6.1,2l4,2i6,a10)')
-     &             lons,lone,lats,late,okx,oky,nx,ny,ausfile(n)
+        write(6,'("lons,lone=",2f6.1," lats,late=",2f6.1,2l4,2i6,a10)') lons,lone,lats,late,okx,oky,nx,ny,ausfile(n)
 
         if ( okx.and.oky ) then
           write(6,*)"call read250(nx,ny,lons,lats,dl,debug,idia,jdia)"
@@ -359,8 +353,7 @@ c initialize min,max, and sd arrays
         ns="N"
         if ( nint(lats).lt.0 ) ns="S"
 
-        write(file,'(a1,i3.3,a1,i2.2,".DEM")')
-     &               ew,abs(nint(lons)),ns,abs(nint(lats))
+        write(file,'(a1,i3.3,a1,i2.2,".DEM")') ew,abs(nint(lons)),ns,abs(nint(lats))
 
         okx = .false.
         okx = okx .or. (lons.gt.rlonn .and. lons.lt.rlonx)
@@ -373,8 +366,7 @@ c initialize min,max, and sd arrays
         oky = oky .or. (late.gt.rlatn .and. late.lt.rlatx)
         oky = oky .or. (lats.gt.rlatx .and. late.lt.rlatn)
 
-        write(6,'("lons,lone=",2f6.1," lats,late=",2f6.1,a12,2l4)')
-     &             lons,lone,lats,late,file,okx,oky
+        write(6,'("lons,lone=",2f6.1," lats,late=",2f6.1,a12,2l4)') lons,lone,lats,late,file,okx,oky
 
         if ( okx.and.oky ) then
           write(6,*)"call read1km(file,nx,ny,lons,lats,debug,idia,jdia)"
@@ -401,8 +393,7 @@ c initialize min,max, and sd arrays
         late=lats-real(ny-1)*dl 
         ns="S"
 
-        write(file,'(a1,i3.3,a1,i2.2,".DEM")')
-     &               ew,abs(nint(lons)),ns,abs(nint(lats))
+        write(file,'(a1,i3.3,a1,i2.2,".DEM")') ew,abs(nint(lons)),ns,abs(nint(lats))
 
         okx = .false.
         okx = okx .or. (lons.gt.rlonn .and. lons.lt.rlonx)
@@ -413,8 +404,7 @@ c initialize min,max, and sd arrays
         oky = oky .or. (late.gt.rlatn .and. late.lt.rlatx)
         oky = oky .or. (lats.gt.rlatx .and. late.lt.rlatn)
 
-        write(6,'("lons,lone=",2f6.1," lats,late=",2f6.1,a12,2l4)')
-     &             lons,lone,lats,late,file,okx,oky
+        write(6,'("lons,lone=",2f6.1," lats,late=",2f6.1,a12,2l4)') lons,lone,lats,late,file,okx,oky
 
         if ( okx.and.oky ) then
           write(6,*)"call read1km(file,nx,ny,lons,lats,debug,idia,jdia)"
@@ -613,9 +603,7 @@ c initialize min,max, and sd arrays
         do j=1,jl
           do i=1,il
             iq=i+(j-1)*il
-            zss(i,j)=0.125*(dum(in(iq),1)+dum(is(iq),1)
-     &                     +dum(ie(iq),1)+dum(iw(iq),1))
-     &              +0.5*dum(iq,1)
+            zss(i,j)=0.125*(dum(in(iq),1)+dum(is(iq),1)+dum(ie(iq),1)+dum(iw(iq),1))+0.5*dum(iq,1)
           end do
         end do
       end if
@@ -634,8 +622,7 @@ c initialize min,max, and sd arrays
       End Do
 
       if (.not.netout) then
-        write(luout,'(i3,i5,2f10.3,f6.3,f8.0,''  orog-mask-var'')')
-     &                           il,jl,rlong0,rlat0,schmidt,ds
+        write(luout,'(i3,i5,2f10.3,f6.3,f8.0,''  orog-mask-var'')') il,jl,rlong0,rlat0,schmidt,ds
       end if
 
       call nc2out(zss  ,il,jl,1,1.,idnc,"zs","zs","m",-100.,30000.)
@@ -644,7 +631,7 @@ c initialize min,max, and sd arrays
       call nc2out(tmax ,il,jl,1,1.,idnc,"zmax","zmax","m",-100.,30000.)
       call nc2out(tmin ,il,jl,1,1.,idnc,"zmin","zmin","m",-100.,30000.)
 
-c     write out g*zs(il,jl) to formatted file
+!     write out g*zs(il,jl) to formatted file
       do j=1,jl
         do i=1,il
           zss(i,j)=9.80616*zss(i,j)
@@ -655,11 +642,11 @@ c     write out g*zs(il,jl) to formatted file
         write (formout,'(''('',i3,''f7.0)'')')ilout   !  i.e. (<il>f7.0)
         write(luout,formout) zss
 
-c     write out land/sea mask to formatted file
+!     write out land/sea mask to formatted file
         write (formout,'(''('',i3,''f4.1)'')')ilout   !  i.e. (<il>f4.1)
         write(luout,formout) rmsk
 
-c     write out std.dev of top. to formatted file
+!     write out std.dev of top. to formatted file
         write (formout,'(''('',i3,''f6.0)'')')ilout   !  i.e. (<il>f6.0)
         write(luout,formout) tsd
       end if
@@ -681,4 +668,4 @@ c     write out std.dev of top. to formatted file
 
       stop
       end
-c=======================================================================
+!=======================================================================

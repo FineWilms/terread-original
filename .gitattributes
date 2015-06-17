@@ -8,7 +8,7 @@
 /jimco_m.f90 -text
 /latltoij_m.f90 -text
 /makefile -text
-/ncdf.f -text
+/ncdf.f90 -text
 /newmpar_m.f90 -text
 /nfft_m.f90 -text
 /parm_m.f90 -text
@@ -20,5 +20,5 @@
 /rwork.f90 -text
 /setxyz_m.f90 -text
 /stacklimit.c -text
-/terread.f -text
+/terread.f90 -text
 /xyzinfo_m.f90 -text

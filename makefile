@@ -23,7 +23,7 @@ clean:
 .SUFFIXES:.f90
 
 stacklimit.o: stacklimit.c
-        cc -c stacklimit.c
+	cc -c stacklimit.c
 
 .f90.o:
 	$(FF) -c $(XFLAGS) $(INC) $<
