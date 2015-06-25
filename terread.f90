@@ -1,11 +1,10 @@
       program terread
 
       use ccinterp
+      use netcdf_m
       use rwork
       
       implicit none
-
-      include 'netcdf.inc'
       
       real rtd,dl,dlh,clons,clats
       real ds,gridn,gridx
@@ -171,7 +170,7 @@
       call nc2out(grid ,il,jl,1,1.,idnc,"grid","grid","km",0.,5000.)
       call nc2out(rlond,il,jl,1,1.,idnc,"lon","lon","degrees",0.,360.)
       call nc2out(rlatd,il,jl,1,1.,idnc,"lat","lat","degrees",-90.,90.)
-      call ncsnc(idnc,ier)
+      !call ncsnc(idnc,ier)
 
 ! initialize min,max, and sd arrays
       do j=1,jl
@@ -658,7 +657,7 @@
         end do ! i=1,il
       end do ! j=1,jl
       call nc2out(zss,il,jl,1,1.,idnc,"inum","inum","none",0.,2000.)
-      call ncsnc(idnc,ier)
+      !call ncsnc(idnc,ier)
       
       if (.not.netout) close(luout)
       

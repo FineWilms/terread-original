@@ -1,9 +1,9 @@
       subroutine ncdf_setup(ofile,idnc,ndim,il,jl,kl,kdate,ktime,rlong0,rlat0,schmidt)
 
+      use netcdf_m
+    
       implicit none
 
-      include "netcdf.inc"   ! comment out on atmos
-      
       integer ics,icmi,ich,icd
       integer icy,icm
 
@@ -81,13 +81,16 @@
       ier=nf_put_att_real(idnc,nf_global,'lat0',nf_real,1,rlat0)
       ier=nf_put_att_real(idnc,nf_global,'schmidt',nf_real,1,schmidt)
 
-      call ncendf(idnc,ier)
+      !call ncendf(idnc,ier)
+      ier=nf_enddef(idnc)
 
       return
       end
 !=======================================================================
       subroutine nc2out(data,il,jl,nt,thr,idnc,sname,lname,units,dn,dx)
 
+      use netcdf_m
+      
       logical debug
 !     parameter ( debug=.false. )
       parameter ( debug=.true. )
@@ -96,8 +99,6 @@
 
 ! this program write out a 2-dim array of data with unlimited time dim.
 ! in netcdf format
-
-      include "netcdf.inc"        ! comment out on atmos
 
       character*(*) sname
       character*(*) lname
@@ -143,7 +144,8 @@
 ! only do the following for the first call to each variable
 !***********************************************************************
 
-        call ncredf(idnc,ier)
+        !call ncredf(idnc,ier)
+        ier=nf_redef(idnc)
         if ( debug ) print *,'ncredf ier=',ier
 
 ! get dimension ids

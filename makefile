@@ -10,7 +10,7 @@ INC = -I $(NETCDF_ROOT)/include
 OBJT = terread.o read_ht.o read1km.o read250.o read10km.o amap.o rwork.o ncdf.o \
        ccinterp.o latltoij_m.o setxyz_m.o xyzinfo_m.o newmpar_m.o \
        indices_m.o parm_m.o precis_m.o ind_m.o jimco_m.o jimcc_m.o \
-       jim_utils.o nfft_m.o stacklimit.o
+       jim_utils.o nfft_m.o netcdf_m.o stacklimit.o
 
 terread :$(OBJT)
 	$(FF) $(XFLAGS) $(OBJT) $(LIBS) -o terread
@@ -33,7 +33,7 @@ stacklimit.o: stacklimit.c
 # Remove mod rule from Modula 2 so GNU make doesn't get confused
 %.o : %.mod
 
-terread.o : ccinterp.o rwork.o
+terread.o : ccinterp.o rwork.o netcdf_m.o
 read250.o : ccinterp.o rwork.o
 read1km.o : ccinterp.o rwork.o
 read10km.o : ccinterp.o rwork.o
@@ -49,6 +49,7 @@ ind_m.o : ind_m.f90 newmpar_m.o
 jimcc_m.o : jimcc_m.f90 parm_m.o precis_m.o 
 jimco_m.o : jimco_m.f90 precis_m.o jim_utils.o nfft_m.o 
 jim_utils.o : jim_utils.f90 precis_m.o 
-nfft_m.o : nfft_m.f90 precis_m.o 
+nfft_m.o : nfft_m.f90 precis_m.o
+ncdf.o : netcdf_m.o
 
 
