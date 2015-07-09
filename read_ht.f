@@ -1,3 +1,24 @@
+! Conformal Cubic Atmospheric Model
+    
+! Copyright 2015 Commonwealth Scientific Industrial Research Organisation (CSIRO)
+    
+! This file is part of the Conformal Cubic Atmospheric Model (CCAM)
+!
+! CCAM is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! CCAM is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License
+! along with CCAM.  If not, see <http://www.gnu.org/licenses/>.
+
+!------------------------------------------------------------------------------
+      
       subroutine read_ht ( lat, ht )
 
 ! read topography data for specified latitude
@@ -40,7 +61,7 @@
 
       do j = 1, nlong
         ival = 256 * ichar(buf(1,j)) + ichar(buf(2,j))
-        if (ival .ge. 32768 ) then ! sign extend
+        if (ival .ge. 32768) then ! sign extend
            ival = 65536 - ival
            !ival = ior( ival, X'FFFFFFFFFFFF0000' )
         end if
