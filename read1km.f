@@ -19,7 +19,7 @@
 
 !------------------------------------------------------------------------------
       
-      subroutine read1km(file,nx,ny,lons,lats,debug,idia,jdia,il)
+      subroutine read1km(file,nx,ny,lons,lats,debug,idia,jdia,il,cut1km)
 
       use ccinterp
       use rwork
@@ -31,6 +31,7 @@
       real dl
       integer nrecl
       real lons,lats
+      real, intent(in) :: cut1km
       parameter ( zmin=-100 )
 
       logical debug,ok
@@ -105,7 +106,6 @@
 !-----------------------------------------------------------------------
 
 ! compute model grid i,j
-           !call latltoij(aglon,aglat,alci,alcj,nface)  ! con-cubic
            call lltoijmod(aglon,aglat,alci,alcj,nface)  ! con-cubic
            lci = nint(alci)
            lcj = nint(alcj)
@@ -119,7 +119,10 @@
            if(lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl)then
              !write(6,*)"i,j,izs(i)=",i,j,izs(i)
 
-             if( izs(i).lt.1 ) then
+           ! exclude points which already have srtm or 250m data
+           if (idsrtm(lci,lcj)==0.and.id250m(lci,lcj)==0) then 
+               
+             if( izs(i).lt.cut1km ) then
 ! ocean point zs < 1
                amask = 0.
                zs=0.
@@ -129,7 +132,7 @@
                zs=real(izs(i))
              end if  ! zs<-1000
 
-             id1km(lci,lcj)=1
+             id1km(lci,lcj) = id1km(lci,lcj) + 1
 ! accumulate number of pnts in grid box
              inum(lci,lcj) = inum(lci,lcj) + 1
 ! accumulate topog. pnts
@@ -150,6 +153,8 @@
                 endif  ! selected points only
              endif  ! debug
 
+           end if !  idsrtm 
+             
            endif ! (lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl)then
 
 !          endif ! ( inum(i,j) .eq. 0 ) then

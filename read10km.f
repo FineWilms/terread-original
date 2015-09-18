@@ -19,7 +19,7 @@
 
 !------------------------------------------------------------------------------
       
-      subroutine read10km(debug,do1km,il)
+      subroutine read10km(debug,do1km,il,cut10km)
 
       use ccinterp
       use rwork
@@ -32,6 +32,7 @@
       integer izs(nx)
       real dl
       real lons,lats
+      real, intent(in) :: cut10km
       parameter ( zmin=-100 )
 
       logical debug,do1km
@@ -80,9 +81,13 @@
           if (grid(lci,lcj).ge.20..or..not.do1km) then
 
             if(lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl)then
+
+            if (idsrtm(lci,lcj)==0.and.id250m(lci,lcj)==0.and.
+     &          id1km(lci,lcj)==0) then ! exclude points which already have srtm data
+                
 ! all other points
 ! (fixup to 5 min data coastline)
-             if( izs(i).lt.-10 ) then
+             if( izs(i).lt.cut10km ) then
 ! ocean point
                amask = 0.
                zs=0.
@@ -91,6 +96,8 @@
                amask = 1.
                zs=real(izs(i))
              end if  ! zs<-1000
+
+             id10km(lci,lcj) = id10km(lci,lcj) + 1  
 ! accumulate topog. pnts
              zss(lci,lcj)=zss(lci,lcj)+zs
 ! accumulate lmask pnts
@@ -110,6 +117,8 @@
      &                       ,almsk(lci,lcj), inum(lci,lcj)
                 endif  ! selected points only
              endif  ! debug
+             
+             end if ! idsrtm
 
             endif ! (lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl)then
            endif !if (grid(lci,lcj).ge.20..or..not.do1km) then

@@ -88,6 +88,8 @@
 ! check to make sure within grid dimensions
            if(lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl) then
 	   
+           if (idsrtm(lci,lcj)==0) then ! exclude points which already have srtm data
+               
              if( zz(n).lt.1 ) then
 ! ocean point if zz < 1
                amask = 0.
@@ -97,6 +99,8 @@
                amask = 1.
                zs=real(zz(n))
              end if  ! zs<-1000
+
+             id250m(lci,lcj) = id250m(lci,lcj) + 1  
 ! accumulate number of pnts in grid box
              inum(lci,lcj) = inum(lci,lcj) + 1
 ! accumulate topog. pnts
@@ -116,6 +120,8 @@
      &          ,zss(lci,lcj),almsk(lci,lcj), inum(lci,lcj)
                 endif  ! selected points only
              endif  ! debug
+             
+           end if ! idsrtm
 
            endif ! (lci.gt.0.and.lci.le.il.and.lcj.gt.0.and.lcj.le.jl)then
 

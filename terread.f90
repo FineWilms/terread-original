@@ -52,8 +52,8 @@
       !include 'rwork.h' ! rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn
 
       logical debug, do1km, okx, oky, do250, dosrtm
+      logical dosrtm1
       logical netout, topfilt
-      logical, dimension(:,:), allocatable :: sermask
       character*60 fileout
       character*9 formout
 
@@ -61,8 +61,10 @@
       integer i,j
       integer il,jl,ilout
       integer ii,jj,kk,ll,nface,lci,lcj
+      integer lcis,lcjs,incg
       integer, dimension(2) :: ccdim,pxy
       integer, dimension(:), allocatable :: in,ie,is,iw
+      integer*2, dimension(3601) :: idata1
       integer*2, dimension(1201) :: idata
       character*1 ns,ew
       character*11 file
@@ -74,6 +76,7 @@
 
       real lons,lats
       real lone,late
+      real cutsrtm,cut10km,cut1km
       real rlong0,rlat0,schmidt,dst
       real zs,aglon,aglat,alci,alcj
       real, dimension(2) :: lonlat
@@ -83,17 +86,21 @@
       data do1km/.true./
       data do250/.true./
       data dosrtm/.false./
+      data dosrtm1/.false./
       data netout/.false./
       data topfilt/.false./
       data idia/24/,jdia/72/
       data id/2/,jd/2/
       data il/48/
       data ds/0./
+      data cutsrtm/0./,cut10km/0./,cut1km/0./
+      data fileout/"top.ff"/
 
       namelist / topnml / ds, du, tanl, rnml, stl1, stl2, debug &
         ,luout, fileout, olam, wbd, sbd, dlon, dlat             &
         ,idia, jdia ,rlong0, rlat0, schmidt                     &
-        ,do1km, do250, dosrtm, id, jd, il, netout, topfilt
+        ,do1km, do250, dosrtm, dosrtm1, id, jd, il, netout      &
+        ,topfilt, cutsrtm, cut10km, cut1km
 
 #ifndef stacklimit
       ! For linux only - removes stacklimit on all processors
@@ -119,7 +126,7 @@
       ccdim(2)=jl
       lonlat(1)=rlong0
       lonlat(2)=rlat0
-      allocate(rlld(ccdim(1),ccdim(2),2),sermask(ccdim(1),ccdim(2)))
+      allocate(rlld(ccdim(1),ccdim(2),2))
       allocate(in(il*jl),ie(il*jl),is(il*jl),iw(il*jl))
       call cgg2(rlld,grid,ccdim,lonlat,schmidt,dst,in,ie,is,iw)
       ds=dst
@@ -202,38 +209,132 @@
         almsk(i,j)=0.
         zss(i,j)=0.
         inum(i,j)=0
+        idsrtm1(i,j)=0
+        idsrtm(i,j)=0
+        id250m(i,j)=0
+        id1km(i,j)=0
+        id10km(i,j)=0
        enddo
       enddo
       
       write(6,*) 'inum(1,1)=',inum(1,1)
 
+      if ( dosrtm1 ) then
+          
+        write(6,*) "Process dosrtm1"
+        
+        do ii=-180,179
+          write(6,*) "Searching ... ",ii
+          if (ii.lt.0) then
+            esg='w'
+          else
+            esg='e'
+          end if
+          write(ecord,'(I3.3)') abs(ii)
+          do jj=-50,50
+            if (jj.lt.0) then
+              nsg='s'
+            else
+              nsg='n'
+            end if
+            write(ncord,'(I2.2)') abs(jj)
+            fname=nsg//ncord//"_"//esg//ecord//'_1arc_v3.bil'
+            
+            open(13,file=fname,access='direct',form='unformatted', &
+                 iostat=ierr,recl=7202,status='old')
+            
+            if (ierr.eq.0) then
+            
+              lons=real(ii)
+              lone=lons+1.
+              lats=real(jj)
+              late=lats+1.
+              
+              okx = .false.
+              okx = okx .or. (lons.ge.rlonn .and. lons.le.rlonx)
+              okx = okx .or. (lone.ge.rlonn .and. lone.le.rlonx)
+              okx = okx .or. (lons.le.rlonn .and. lone.ge.rlonx)
+              oky = .false.
+              oky = oky .or. (lats.ge.rlatn .and. lats.le.rlatx) ! start lat in area
+              oky = oky .or. (late.ge.rlatn .and. late.le.rlatx) ! end lat in area
+              oky = oky .or. (lats.le.rlatn .and. late.ge.rlatx) ! grid encompasses hr reg
+              oky = oky .or. (lats.ge.rlatn .and. late.le.rlatx) ! grid within hr reg
+
+              if ( okx .and. oky ) then
+                write(6,*) "Reading ",trim(fname)
+                write(6,*) "cutsrtm=",cutsrtm
+                do kk = 1,3600 ! ignore extra overlap row
+                  read(13,rec=kk) idata1
+                  aglat=late-real(kk-1)/3600.
+                  do ll=1,3600
+                    aglon=lons+real(ll-1)/3600.
+                    call lltoijmod(aglon,aglat,alci,alcj,nface)
+                    lcis = nint(alci)
+                    lcjs = nint(alcj)
+                    lcjs=lcj+nface*il
+                    if (idata1(ll).gt.-32768) then
+                      lcis = int(alci)
+                      lcjs = int(alcj)
+                      lcjs=lcjs+nface*il
+                      incg=1
+                      
+                      do lci=lcis,min(il,lcis+incg)
+                      do lcj=lcjs,min(jl,lcjs+incg)
+                    
+                      zs=real(idata(ll))
+                      
+                      if (zs.gt.cutsrtm) then
+                        almsk(lci,lcj) = almsk(lci,lcj) + 1.
+                      end if
+                        
+                      idsrtm1(lci,lcj) = idsrtm1(lci,lcj) + 1
+                      inum(lci,lcj) = inum(lci,lcj) + 1 ! accumulate number of points in grid box
+                      zss(lci,lcj) = zss(lci,lcj) + zs ! accumulate topog. pnts
+                      tmax(lci,lcj)=max(tmax(lci,lcj),zs) ! find max/min topog. pnts in grid box
+                      tmin(lci,lcj)=min(tmin(lci,lcj),zs)
+                      tsd(lci,lcj)=tsd(lci,lcj)+zs**2 ! sum of squares for sd calc.
+                      
+                      end do
+                      end do
+                      
+                    end if ! idata1(ll).gt.-32768
+                  end do ! ll
+                end do   ! kk
+              end if
+              close(13)
+            end if
+          end do
+        end do
+          
+      end if ! dosrtm1
+      
       if ( dosrtm ) then
         write(6,*) "Process dosrtm"
       
         do ii=-180,179
-	  write(6,*) "Searching ... ",ii
-	  if (ii.lt.0) then
-	    esg='W'
-	  else
-	    esg='E'
-	  end if
+          write(6,*) "Searching ... ",ii
+          if (ii.lt.0) then
+            esg='W'
+          else
+            esg='E'
+          end if
           write(ecord,'(I3.3)') abs(ii)
-	  do jj=-90,89
-	    if (jj.lt.0) then
-	      nsg='S'
-	    else
-	      nsg='N'
-	    end if
-	    write(ncord,'(I2.2)') abs(jj)
-	    fname=nsg//ncord//esg//ecord//'.hgt'
-	    open (13,file=fname,access='direct',form='unformatted',convert='big_endian',iostat=ierr,recl=2402,status='old')
+          do jj=-90,89
+            if (jj.lt.0) then
+              nsg='S'
+            else
+              nsg='N'
+            end if
+            write(ncord,'(I2.2)') abs(jj)
+            fname=nsg//ncord//esg//ecord//'.hgt'
+            open (13,file=fname,access='direct',form='unformatted',convert='big_endian',iostat=ierr,recl=2402,status='old')
 	    
-	    if (ierr.eq.0) then
+            if (ierr.eq.0) then
 	    
-	      lons=real(ii)
-	      lone=lons+1.
-	      lats=real(jj)
-	      late=lats+1.
+              lons=real(ii)
+              lone=lons+1.
+              lats=real(jj)
+              late=lats+1.
 
               okx = .false.
               okx = okx .or. (lons.ge.rlonn .and. lons.le.rlonx)
@@ -245,38 +346,46 @@
               oky = oky .or. (lats.le.rlatn .and. late.ge.rlatx) ! grid encompasses hr reg
               oky = oky .or. (lats.ge.rlatn .and. late.le.rlatx) ! grid within hr reg
 	    
-	      if (okx.and.oky) then
-	        write(6,*) "Reading ",trim(fname)
-		do kk=1,1200 ! ignore extra overlap row
+              if (okx.and.oky) then
+	            write(6,*) "Reading ",trim(fname)
+                write(6,*) "cutsrtm=",cutsrtm
+                do kk=1,1200 ! ignore extra overlap row
                   read(13,rec=kk) idata
-		  aglat=late-real(kk-1)/1200.
-		  do ll=1,1200
-		    if (idata(ll).gt.-32768) then
-                      aglon=lons+real(ll-1)/1200.
-                      call lltoijmod(aglon,aglat,alci,alcj,nface)
-                      lci = nint(alci)
-                      lcj = nint(alcj)
-                      lcj=lcj+nface*il		  
-		    
-		      zs=real(idata(ll))
-                      if( zs.lt.1. ) then
-                        almsk(lci,lcj) = almsk(lci,lcj) + 0.
-                      else
+                  aglat=late-real(kk-1)/1200.
+                  do ll=1,1200
+                    aglon=lons+real(ll-1)/1200.
+                    call lltoijmod(aglon,aglat,alci,alcj,nface)
+                    if (idata(ll).gt.-32768) then
+                      lcis = nint(alci)
+                      lcjs = nint(alcj)
+                      lcjs=lcjs+nface*il
+                      incg=1                
+                      
+                      do lci=lcis,min(il,lcis+incg)
+                      do lcj=lcjs,min(jl,lcjs+incg)
+    
+                      zs=real(idata(ll))
+                      if( zs.gt.cutsrtm ) then
                         almsk(lci,lcj) = almsk(lci,lcj) + 1.
                       end if  ! zs<-1000
+                      idsrtm(lci,lcj) = idsrtm(lci,lcj) + 1
                       inum(lci,lcj) = inum(lci,lcj) + 1 ! accumulate number of pnts in grid box
                       zss(lci,lcj) = zss(lci,lcj) + zs ! accumulate topog. pnts
                       tmax(lci,lcj)=max(tmax(lci,lcj),zs) ! find max/min topog. pnts in grid box
                       tmin(lci,lcj)=min(tmin(lci,lcj),zs)
                       tsd(lci,lcj)=tsd(lci,lcj)+zs**2 ! sum of squares for sd calc.
+                      
+                      end do
+                      end do
+                      
                     end if
-		  end do
-	        end do
-	      end if
-	      close(13)
-	    end if
-	  end do
-	end do
+                  end do
+                end do
+              end if
+              close(13)
+            end if
+          end do
+        end do
       end if
       
 !================================
@@ -393,7 +502,7 @@
 ! 9 sept 2004
           clons=lons+dlh
           clats=lats-dlh
-          call read1km(file,nx,ny,clons,clats,debug,idia,jdia,il)
+          call read1km(file,nx,ny,clons,clats,debug,idia,jdia,il,cut1km)
           !call read1km(file,nx,ny,lons,lats,debug,idia,jdia)
 ! 9 sept 2004
         endif
@@ -431,7 +540,7 @@
 ! 9 sept 2004
           clons=lons+dlh
           clats=lats-dlh
-          call read1km(file,nx,ny,clons,clats,debug,idia,jdia,il)
+          call read1km(file,nx,ny,clons,clats,debug,idia,jdia,il,cut1km)
           !call read1km(file,nx,ny,lons,lats,debug,idia,jdia)
 ! 9 sept 2004
         endif
@@ -491,7 +600,7 @@
 !***********************************************************************
 
       write(6,*)"Now calling read10km"
-      call read10km(debug,do1km,il)
+      call read10km(debug,do1km,il,cut10km)
 
 !================================
 
@@ -559,7 +668,7 @@
 ! ocean point
                 rmsk(i,j) = 0.
                 zss(i,j)=0. ! jjk added 18-8-2004
-	  	    tsd(i,j)=0. !mjt 12-5-05
+                tsd(i,j)=0. !mjt 12-5-05
 		        tmax(i,j)=0. !mjt 12-5-05
 		        tmin(i,j)=0. !mjt 12-5-05
              else ! almsk
@@ -678,11 +787,45 @@
         end do ! i=1,il
       end do ! j=1,jl
       call nc2out(zss,il,jl,1,1.,idnc,"inum","inum","none",0.,2000.)
-      !call ncsnc(idnc,ier)
+
+      do j=1,jl
+        do i=1,il
+          zss(i,j)=real(idsrtm1(i,j))
+        end do ! i=1,il
+      end do ! j=1,jl
+      call nc2out(zss,il,jl,1,1.,idnc,"idsrtm1","idsrtm1","none",0.,2000.)
+
+      do j=1,jl
+        do i=1,il
+          zss(i,j)=real(idsrtm(i,j))
+        end do ! i=1,il
+      end do ! j=1,jl
+      call nc2out(zss,il,jl,1,1.,idnc,"idsrtm","idsrtm","none",0.,2000.)
+
+      do j=1,jl
+        do i=1,il
+          zss(i,j)=real(id250m(i,j))
+        end do ! i=1,il
+      end do ! j=1,jl
+      call nc2out(zss,il,jl,1,1.,idnc,"id250m","id250m","none",0.,2000.)
+
+      do j=1,jl
+        do i=1,il
+          zss(i,j)=real(id1km(i,j))
+        end do ! i=1,il
+      end do ! j=1,jl
+      call nc2out(zss,il,jl,1,1.,idnc,"id1km","id1km","none",0.,2000.)
+
+      do j=1,jl
+        do i=1,il
+          zss(i,j)=real(id10km(i,j))
+        end do ! i=1,il
+      end do ! j=1,jl
+      call nc2out(zss,il,jl,1,1.,idnc,"id10km","id10km","none",0.,2000.)
       
       if (.not.netout) close(luout)
       
-      deallocate(rlld,sermask)
+      deallocate(rlld)
       deallocate(in,ie,is,iw)
       call rworkdealloc
 

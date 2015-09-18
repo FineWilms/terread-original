@@ -22,12 +22,14 @@
 module rwork
 
 private
-public rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,id1km,rlonx,rlonn,rlatx,rlatn, &
-       dum,rworkalloc,rworkdealloc
+public rmsk,inum,inumx,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,rlonx,rlonn,rlatx,rlatn
+public dum,rworkalloc,rworkdealloc
+public idsrtm1,idsrtm,id250m,id1km,id10km
 
 real, save :: rlonx,rlonn,rlatx,rlatn
 real, dimension(:,:), allocatable, save :: rmsk,zss,almsk,tmax,tmin,tsd,rlatd,rlond,grid,dum
-integer, dimension(:,:), allocatable, save :: inum,inumx,id1km
+integer, dimension(:,:), allocatable, save :: inum,inumx
+integer, dimension(:,:), allocatable, save :: idsrtm1,idsrtm,id250m,id1km,id10km
 
 contains
 
@@ -41,7 +43,8 @@ integer jl
 jl=6*il
 
 allocate(rmsk(il,jl),zss(il,jl),almsk(il,jl),tmax(il,jl),tmin(il,jl),tsd(il,jl))
-allocate(rlatd(il,jl),rlond(il,jl),grid(il,jl),inum(il,jl),inumx(il,jl),id1km(il,jl))
+allocate(rlatd(il,jl),rlond(il,jl),grid(il,jl),inum(il,jl),inumx(il,jl))
+allocate(idsrtm1(il,jl),idsrtm(il,jl),id250m(il,jl),id1km(il,jl),id10km(il,jl))
 allocate(dum(il,jl))
 
 return
@@ -52,8 +55,9 @@ subroutine rworkdealloc
 implicit none
 
 deallocate(rmsk,zss,almsk,tmax,tmin,tsd)
-deallocate(rlatd,rlond,grid,inum,inumx,id1km)
+deallocate(rlatd,rlond,grid,inum,inumx)
 deallocate(dum)
+deallocate(idsrtm1,idsrtm,id250m,id1km,id10km)
 
 return
 end subroutine rworkdealloc
