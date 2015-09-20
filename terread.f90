@@ -94,13 +94,14 @@
       data il/48/
       data ds/0./
       data cutsrtm/0./,cut10km/0./,cut1km/0./
-      data fileout/"top.ff"/
+      data incg/0/
+      data fileout/"top.nc"/
 
       namelist / topnml / ds, du, tanl, rnml, stl1, stl2, debug &
         ,luout, fileout, olam, wbd, sbd, dlon, dlat             &
         ,idia, jdia ,rlong0, rlat0, schmidt                     &
         ,do1km, do250, dosrtm, dosrtm1, id, jd, il, netout      &
-        ,topfilt, cutsrtm, cut10km, cut1km
+        ,topfilt, cutsrtm, cut10km, cut1km, incg
 
 #ifndef stacklimit
       ! For linux only - removes stacklimit on all processors
@@ -276,7 +277,6 @@
                       lcis = int(alci)
                       lcjs = int(alcj)
                       lcjs=lcjs+nface*il
-                      incg=1
                       
                       do lci=lcis,min(il,lcis+incg)
                       do lcj=lcjs,min(jl,lcjs+incg)
@@ -359,7 +359,6 @@
                       lcis = nint(alci)
                       lcjs = nint(alcj)
                       lcjs=lcjs+nface*il
-                      incg=1                
                       
                       do lci=lcis,min(il,lcis+incg)
                       do lcj=lcjs,min(jl,lcjs+incg)
