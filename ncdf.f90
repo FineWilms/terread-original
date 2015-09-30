@@ -311,6 +311,16 @@
 
       return
       end
+    
+      subroutine ncclose(idnc)
+      use netcdf_m
+      implicit none
+      integer, intent(in) :: idnc
+      integer ier
+      ier = nf_close(idnc)
+      return
+      end
+    
 !=======================================================================
       function lngstr( string )
       character*(*) string

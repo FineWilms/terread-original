@@ -822,6 +822,7 @@
       end do ! j=1,jl
       call nc2out(zss,il,jl,1,1.,idnc,"id10km","id10km","none",0.,2000.)
       
+      call ncclose(idnc)
       if (.not.netout) close(luout)
       
       deallocate(rlld)
