@@ -50,7 +50,7 @@
          write(6,*)"open file='topo2' lui=",lui
          open (lui, file='topo2',
      &   status='old', access='direct',
-     &   form='unformatted', recl=nlong*8, iostat=ios)
+     &   form='unformatted', recl=nlong*2, iostat=ios)
          new = .false.
       end if
 
@@ -62,7 +62,7 @@
       do j = 1, nlong
         ival = 256 * ichar(buf(1,j)) + ichar(buf(2,j))
         if (ival .ge. 32768) then ! sign extend
-           ival = 65536 - ival
+           ival = ival - 65536
            !ival = ior( ival, X'FFFFFFFFFFFF0000' )
         end if
         ht(j) = ival
