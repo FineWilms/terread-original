@@ -50,7 +50,7 @@
          write(6,*)"open file='topo2' lui=",lui
          open (lui, file='topo2',
      &   status='old', access='direct',
-     &   form='unformatted', recl=nlong*2, iostat=ios)
+     &   form='unformatted', recl=nlong*8, iostat=ios)
          new = .false.
       end if
 
