@@ -261,7 +261,7 @@
       write(6,*)"thr=",thr
       if ( thr.ge.0. ) then
 ! set time to number of hours since start = thr
-        ier = nf_inq_varid(idnc,'latitude',idnt)
+        ier = nf_inq_varid(idnc,'time',idnt)
         if ( debug ) print *,'ncdiv idnt,ier=',idnt,ier
         start = nt
         ncount = 1
