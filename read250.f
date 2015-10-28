@@ -33,6 +33,7 @@
       parameter ( zmin=-100 )
 
       logical debug,ok,ow
+      logical patch
 
       data ow/.false./
 
@@ -46,6 +47,9 @@
 ! read data then close file
       read(13) (zz(i),i=1,nx*ny)
       close(13)
+      
+      ! MJT bug fix
+      patch = ( lons==144.0010 .and. lats==-27.9988 )
 
 !#######################################################################
       do jg=1,ny
@@ -65,6 +69,10 @@
 !#######################################################################
 
            n=ig+(jg-1)*nx
+	   
+           ! MJT bug fix
+           if (patch.and.(jg==526.or.jg==527).and.zz(n)<0) cycle
+	   
            aglat=lats+real(jg-1)*dl
            aglon=lons+real(ig-1)*dl
            if(ow)write(6,*)ig,aglon
