@@ -3,9 +3,18 @@
 # Specify any desired preprocessor or compiler flags here; -R2 for .L files.
 
 FF = ifort
-XFLAGS = -O -fpp -assume byterecl
+XFLAGS = -O -assume byterecl
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
 INC = -I $(NETCDF_ROOT)/include
+PPFLAG90 = -fpp
+PPFLAG77 = -fpp
+
+ifeq ($(GFORTRAN),yes)
+FF = gfortran
+XFLAGS = -O2 -mtune=native -march=native -I $(NETCDF_ROOT)/include
+PPFLAG90 = -x f95-cpp-input
+PPFLAG77 = -x f77-cpp-input
+endif
 
 OBJT = terread.o read_ht.o read1km.o read250.o read10km.o amap.o rwork.o ncdf.o \
        ccinterp.o latltoij_m.o setxyz_m.o xyzinfo_m.o newmpar_m.o \
@@ -26,9 +35,9 @@ stacklimit.o: stacklimit.c
 	cc -c stacklimit.c
 
 .f90.o:
-	$(FF) -c $(XFLAGS) $(INC) $<
+	$(FF) -c $(XFLAGS) $(INC) $(PPFLAG90) $<
 .f.o:
-	$(FF) -c $(XFLAGS) $(INC) $<
+	$(FF) -c $(XFLAGS) $(INC) $(PPFLAG77) $<
 
 # Remove mod rule from Modula 2 so GNU make doesn't get confused
 %.o : %.mod
